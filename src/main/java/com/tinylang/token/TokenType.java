@@ -1,4 +1,4 @@
-package com.lexer;
+package com.tinylang.token;
 
 public enum TokenType {
 
@@ -11,13 +11,13 @@ public enum TokenType {
     EQUAL, EQUAL_EQUAL,
     GREATER, GREATER_EQUAL,
     LESS, LESS_EQUAL,
-    AND, OR,
 
     // Literals
     IDENTIFIER, STRING, NUMBER,
 
     // Keywords
-    LET, FN, RETURN, IF, ELSE, WHILE, TRUE, FALSE,
+    AND, LET, FN, RETURN, IF, ELSE, FOR, NIL, OR, FUN,
+    WHILE, TRUE, FALSE, CLASS, PRINT, SUPER, THIS,
 
     EOF
 }
