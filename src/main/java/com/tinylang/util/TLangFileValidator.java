@@ -1,4 +1,4 @@
-package com.util;
+package com.tinylang.util;
 
 import java.nio.file.Path;
 
