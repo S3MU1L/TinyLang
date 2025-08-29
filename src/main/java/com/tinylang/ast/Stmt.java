@@ -1,4 +1,4 @@
-package com.parser.ast;
+package com.tinylang.ast;
 
 import java.util.List;
 
@@ -6,11 +6,22 @@ public abstract class Stmt {
 
     public interface Visitor<R> {
         R visitLetStmt(Let stmt);
+
         R visitExpressionStmt(Expression stmt);
+
         R visitIfStmt(If stmt);
+
         R visitWhileStmt(While stmt);
+
         R visitReturnStmt(Return stmt);
+
         R visitBlockStmt(Block stmt);
+
+        R visitClassStmt(Class stmt);
+
+        R visitFunctionStmt(Function stmt);
+
+        R visitPrintStmt(Print stmt);
     }
 
     public abstract <R> R accept(Visitor<R> visitor);
@@ -27,6 +38,51 @@ public abstract class Stmt {
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitLetStmt(this);
+        }
+    }
+
+    public static class Class extends Stmt {
+        public final String name;
+        public final List<Stmt.Function> methods;
+
+        public Class(String name, List<Stmt.Function> methods) {
+            this.name = name;
+            this.methods = methods;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitClassStmt(this);
+        }
+    }
+
+    public static class Function extends Stmt {
+        public final String name;
+        public final List<String> params;
+        public final Stmt body;
+
+        public Function(String name, List<String> params, Stmt body) {
+            this.name = name;
+            this.params = params;
+            this.body = body;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitFunctionStmt(this);
+        }
+    }
+
+    public static class Print extends Stmt {
+        public final Expr expression;
+
+        public Print(Expr expression) {
+            this.expression = expression;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitPrintStmt(this);
         }
     }
 
