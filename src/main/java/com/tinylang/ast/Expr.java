@@ -1,4 +1,7 @@
-package com.parser.ast;
+package com.tinylang.ast;
+
+import com.tinylang.token.Token;
+import com.tinylang.token.TokenType;
 
 import java.util.List;
 
@@ -13,43 +16,58 @@ public abstract class Expr {
 
         R visitAssignExpr(AssignExpr expr);
 
-        R visitCallExpr(callExpr expr);
+        R visitCallExpr(CallExpr expr);
 
         R visitGroupingExpr(GroupingExpr expr);
 
         R visitFunctionExpr(Function expr);
+
+        R visitLiteralExpr(LiteralExpr expr);
     }
 
-    abstract <R> R accept(Visitor<R> visitor);
+    public abstract <R> R accept(Visitor<R> visitor);
+
+    public static class LiteralExpr extends Expr {
+        public final Object value;
+
+        public LiteralExpr(Object value) {
+            this.value = value;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitLiteralExpr(this);
+        }
+    }
 
     public static class BinaryExpr extends Expr {
         public final Expr left;
-        public final String operator;
+        public final TokenType operator;
         public final Expr right;
 
-        public BinaryExpr(Expr left, String operator, Expr right) {
+        public BinaryExpr(Expr left, TokenType operator, Expr right) {
             this.left = left;
             this.operator = operator;
             this.right = right;
         }
 
         @Override
-        <R> R accept(Visitor<R> visitor) {
+        public <R> R accept(Visitor<R> visitor) {
             return visitor.visitBinaryExpr(this);
         }
     }
 
     public static class UnaryExpr extends Expr {
-        public final String operator;
+        public final TokenType operator;
         public final Expr right;
 
-        public UnaryExpr(String operator, Expr right) {
+        public UnaryExpr(TokenType operator, Expr right) {
             this.operator = operator;
             this.right = right;
         }
 
         @Override
-        <R> R accept(Visitor<R> visitor) {
+        public <R> R accept(Visitor<R> visitor) {
             return visitor.visitUnaryExpr(this);
         }
     }
@@ -62,7 +80,7 @@ public abstract class Expr {
         }
 
         @Override
-        <R> R accept(Visitor<R> visitor) {
+        public <R> R accept(Visitor<R> visitor) {
             return visitor.visitVarExpr(this);
         }
     }
@@ -77,24 +95,24 @@ public abstract class Expr {
         }
 
         @Override
-        <R> R accept(Visitor<R> visitor) {
+        public <R> R accept(Visitor<R> visitor) {
             return visitor.visitAssignExpr(this);
         }
     }
 
-    public static class callExpr extends Expr {
+    public static class CallExpr extends Expr {
         public final Expr callee;
-        public final String paren;
+        public final Token paren;
         public final List<Expr> arguments;
 
-        public callExpr(Expr callee, String paren, List<Expr> arguments) {
+        public CallExpr(Expr callee, Token paren, List<Expr> arguments) {
             this.callee = callee;
             this.paren = paren;
             this.arguments = arguments;
         }
 
         @Override
-        <R> R accept(Visitor<R> visitor) {
+        public <R> R accept(Visitor<R> visitor) {
             return visitor.visitCallExpr(this);
         }
     }
@@ -107,22 +125,22 @@ public abstract class Expr {
         }
 
         @Override
-        <R> R accept(Visitor<R> visitor) {
+        public <R> R accept(Visitor<R> visitor) {
             return visitor.visitGroupingExpr(this);
         }
     }
 
     public static class Function extends Expr {
         public final List<String> params;
-        public final Stmt.Block body;
+        public final Stmt body;
 
-        public Function(List<String> params, Stmt.Block body) {
+        public Function(List<String> params, Stmt body) {
             this.params = params;
             this.body = body;
         }
 
         @Override
-        <R> R accept(Visitor<R> visitor) {
+        public <R> R accept(Visitor<R> visitor) {
             return visitor.visitFunctionExpr(this);
         }
     }

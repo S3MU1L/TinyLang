@@ -1,9 +1,11 @@
-package com.lexer;
+package com.tinylang;
 
-import com.error.Error;
+import com.tinylang.token.Token;
+import com.tinylang.token.TokenType;
 
 import java.util.*;
 
+import static com.tinylang.token.TokenType.*;
 import static java.lang.Character.isDigit;
 
 public class Lexer {
@@ -12,14 +14,22 @@ public class Lexer {
 
     static {
         keywords = new HashMap<>();
-        keywords.put("let", TokenType.LET);
-        keywords.put("if", TokenType.IF);
-        keywords.put("else", TokenType.ELSE);
-        keywords.put("true", TokenType.TRUE);
-        keywords.put("false", TokenType.FALSE);
-        keywords.put("fn", TokenType.FN);
-        keywords.put("return", TokenType.RETURN);
-        keywords.put("while", TokenType.WHILE);
+        keywords.put("and", AND);
+        keywords.put("class", CLASS);
+        keywords.put("else", ELSE);
+        keywords.put("false", FALSE);
+        keywords.put("for", FOR);
+        keywords.put("fn", FUN);
+        keywords.put("if", IF);
+        keywords.put("nil", NIL);
+        keywords.put("or", OR);
+        keywords.put("print", PRINT);
+        keywords.put("return", RETURN);
+        keywords.put("super", SUPER);
+        keywords.put("this", THIS);
+        keywords.put("true", TRUE);
+        keywords.put("while", WHILE);
+        keywords.put("let", LET);
     }
 
     private int start = 0;
@@ -27,12 +37,10 @@ public class Lexer {
     private int line = 1;
     private final String content;
     private final List<Token> tokens;
-    private Optional<Error> error;
 
     public Lexer(String content) {
         this.content = content;
         this.tokens = new ArrayList<>();
-        this.error = Optional.empty();
     }
 
     public List<Token> scanTokens() {
@@ -81,7 +89,7 @@ public class Lexer {
                 } else if (isAlpha(c)) {
                     identifier();
                 } else {
-                    setError(new Error("Unexpected character.", line));
+                    TinyLang.error(line, "Unexpected character.");
                 }
             }
         }
@@ -131,7 +139,7 @@ public class Lexer {
         }
 
         if (isAtEnd()) {
-            setError(new Error("Unterminated string.", line));
+            TinyLang.error(line, "Unterminated string.");
             return;
         }
 
@@ -168,13 +176,5 @@ public class Lexer {
             type = TokenType.IDENTIFIER;
         }
         addToken(type, text);
-    }
-
-    private void setError(Error error) {
-        this.error = Optional.ofNullable(error);
-    }
-
-    public Optional<Error> getError() {
-        return error;
     }
 }
