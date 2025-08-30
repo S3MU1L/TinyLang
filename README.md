@@ -1,6 +1,7 @@
 ******# TinyLang Specification
 
-TinyLang is a minimal, educational programming language designed for writing a small interpreter. The goal is to keep the language small but expressive enough to support variables, arithmetic, control flow, and functions.
+TinyLang is a minimal, educational programming language designed for writing a small interpreter. The goal is to keep
+the language small but expressive enough to support variables, arithmetic, control flow, and functions.
 
 ---
 
@@ -13,10 +14,10 @@ TinyLang is a minimal, educational programming language designed for writing a s
 
 ### Literals
 
-*   **Number literals**: sequences of digits, optionally with a decimal part (e.g., `42`, `123.45`)
-*   **String literals**: characters enclosed in double quotes (e.g., `"hello"`)
-*   **Boolean literals**: `true`, `false`
-*   **Nil literal**: `nil`
+* **Number literals**: sequences of digits, optionally with a decimal part (e.g., `42`, `123.45`)
+* **String literals**: characters enclosed in double quotes (e.g., `"hello"`)
+* **Boolean literals**: `true`, `false`
+* **Nil literal**: `nil`
 
 ### Keywords
 
@@ -107,6 +108,7 @@ primary       ::= "true"
                 | IDENT 
                 | "(" expression ")" 
                 | "super" "." IDENT
+                | "fn" "(" parameters? ")" block
 
 function      ::= IDENT "(" parameters? ")" block 
 
@@ -122,55 +124,55 @@ arguments     ::= expression ( "," expression )*
 
 ### Variables
 
-*   Declared with `let`
-*   Example:
+* Declared with `let`
+* Example:
 
-    ```
-    let x = 10;
-    let y = x + 5;
-    ```
+  ```
+  let x = 10;
+  let y = x + 5;
+  ```
 
 ### Functions
 
-*   Declared with `fn`
-*   Functions are **first-class values**
-*   Example:
+* Declared with `fn`
+* Functions are **first-class values**
+* Example:
 
-    ```
-    let add = fn(a, b) {
-      return a + b;
-    };
-    let result = add(3, 4);
-    ```
+  ```
+  let add = fn(a, b) {
+    return a + b;
+  };
+  let result = add(3, 4);
+  ```
 
 ### Control Flow
 
-*   **If/Else**:
+* **If/Else**:
 
-    ```
-    if (x < 10) {
-      x = x + 1;
-    } else {
-      x = 0;
-    }
-    ```
+  ```
+  if (x < 10) {
+    x = x + 1;
+  } else {
+    x = 0;
+  }
+  ```
 
-*   **While**:
+* **While**:
 
-    ```
-    while (x > 0) {
-      x = x - 1;
-    }
-    ```
+  ```
+  while (x > 0) {
+    x = x - 1;
+  }
+  ```
 
 ### Expressions
 
-*   Support standard arithmetic and boolean operators
-*   Example:
+* Support standard arithmetic and boolean operators
+* Example:
 
-    ```
-    let flag = (x > 0) and (y < 10);
-    ```
+  ```
+  let flag = (x > 0) and (y < 10);
+  ```
 
 ---
 
