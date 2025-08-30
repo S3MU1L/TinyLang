@@ -3,3 +3,6 @@ class Person {
         print name;
     }
 }
+
+let x = 10;
+x = 20;
