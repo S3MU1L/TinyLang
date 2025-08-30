@@ -104,7 +104,7 @@ public class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
 
     @Override
     public String visitVarExpr(Expr.VarExpr expr) {
-        return expr.name;
+        return expr.name.lexeme();
     }
 
     @Override
