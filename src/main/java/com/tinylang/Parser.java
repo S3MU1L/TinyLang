@@ -195,9 +195,8 @@ public class Parser {
         if (match(TokenType.EQUAL)) {
             Token equals = previous();
             Expr value = assignment();
-
             if (expr instanceof Expr.VarExpr varExpr) {
-                String name = varExpr.name;
+                Token name = varExpr.name;
                 return new Expr.AssignExpr(name, value);
             }
             error(equals, "Invalid assignment target.");
@@ -210,7 +209,7 @@ public class Parser {
         while (match(TokenType.OR)) {
             Token operator = previous();
             Expr right = logicalAnd();
-            expr = new Expr.BinaryExpr(expr, operator.type(), right);
+            expr = new Expr.BinaryExpr(expr, operator, right);
         }
         return expr;
     }
@@ -220,7 +219,7 @@ public class Parser {
         while (match(TokenType.AND)) {
             Token operator = previous();
             Expr right = equality();
-            expr = new Expr.BinaryExpr(expr, operator.type(), right);
+            expr = new Expr.BinaryExpr(expr, operator, right);
         }
         return expr;
     }
@@ -230,7 +229,7 @@ public class Parser {
         while (match(TokenType.EQUAL_EQUAL, TokenType.BANG_EQUAL)) {
             Token operator = previous();
             Expr right = comparison();
-            expr = new Expr.BinaryExpr(expr, operator.type(), right);
+            expr = new Expr.BinaryExpr(expr, operator, right);
         }
         return expr;
     }
@@ -240,7 +239,7 @@ public class Parser {
         while (match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL)) {
             Token operator = previous();
             Expr right = term();
-            expr = new Expr.BinaryExpr(expr, operator.type(), right);
+            expr = new Expr.BinaryExpr(expr, operator, right);
         }
         return expr;
     }
@@ -250,7 +249,7 @@ public class Parser {
         while (match(TokenType.PLUS, TokenType.MINUS)) {
             Token operator = previous();
             Expr right = factor();
-            expr = new Expr.BinaryExpr(expr, operator.type(), right);
+            expr = new Expr.BinaryExpr(expr, operator, right);
         }
         return expr;
     }
@@ -260,7 +259,7 @@ public class Parser {
         while (match(TokenType.STAR, TokenType.SLASH)) {
             Token operator = previous();
             Expr right = unary();
-            expr = new Expr.BinaryExpr(expr, operator.type(), right);
+            expr = new Expr.BinaryExpr(expr, operator, right);
         }
         return expr;
     }
@@ -269,7 +268,7 @@ public class Parser {
         if (match(TokenType.BANG, TokenType.MINUS)) {
             Token operator = previous();
             Expr right = unary();
-            return new Expr.UnaryExpr(operator.type(), right);
+            return new Expr.UnaryExpr(operator, right);
         }
         return call();
     }
@@ -308,7 +307,7 @@ public class Parser {
             return new Expr.LiteralExpr(previous().literal());
         }
         if (match(TokenType.IDENTIFIER)) {
-            return new Expr.VarExpr(previous().lexeme());
+            return new Expr.VarExpr(previous());
         }
         if (match(TokenType.LEFT_PAREN)) {
             Expr expr = expression();

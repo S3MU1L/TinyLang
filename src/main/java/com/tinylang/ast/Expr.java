@@ -1,7 +1,7 @@
 package com.tinylang.ast;
 
 import com.tinylang.token.Token;
-import com.tinylang.token.TokenType;
+import com.tinylang.token.Token;
 
 import java.util.List;
 
@@ -42,10 +42,10 @@ public abstract class Expr {
 
     public static class BinaryExpr extends Expr {
         public final Expr left;
-        public final TokenType operator;
+        public final Token operator;
         public final Expr right;
 
-        public BinaryExpr(Expr left, TokenType operator, Expr right) {
+        public BinaryExpr(Expr left, Token operator, Expr right) {
             this.left = left;
             this.operator = operator;
             this.right = right;
@@ -58,10 +58,10 @@ public abstract class Expr {
     }
 
     public static class UnaryExpr extends Expr {
-        public final TokenType operator;
+        public final Token operator;
         public final Expr right;
 
-        public UnaryExpr(TokenType operator, Expr right) {
+        public UnaryExpr(Token operator, Expr right) {
             this.operator = operator;
             this.right = right;
         }
@@ -73,9 +73,9 @@ public abstract class Expr {
     }
 
     public static class VarExpr extends Expr {
-        public final String name;
+        public final Token name;
 
-        public VarExpr(String name) {
+        public VarExpr(Token name) {
             this.name = name;
         }
 
@@ -86,10 +86,10 @@ public abstract class Expr {
     }
 
     public static class AssignExpr extends Expr {
-        public final String name;
+        public final Token name;
         public final Expr value;
 
-        public AssignExpr(String name, Expr value) {
+        public AssignExpr(Token name, Expr value) {
             this.name = name;
             this.value = value;
         }
