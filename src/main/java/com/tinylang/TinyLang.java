@@ -1,6 +1,7 @@
 package com.tinylang;
 
 import com.tinylang.ast.Stmt;
+import com.tinylang.error.RuntimeError;
 import com.tinylang.token.Token;
 import com.tinylang.token.TokenType;
 import com.tinylang.printer.AstPrinter;
@@ -42,10 +43,11 @@ public class TinyLang {
         List<Token> tokens = lexer.scanTokens();
         Parser parser = new Parser(tokens);
         List<Stmt> statements = parser.parse();
-
-        if (hadError) return;
-
+        if (hadError) System.exit(1);
         AstPrinter.print(statements);
+
+//        interpreter.interpret();
+        if (hadRuntimeError) System.exit(2);
     }
 
     private static void runPrompt() {
@@ -81,9 +83,9 @@ public class TinyLang {
         }
     }
 
-    public static void runtimeError(String message) {
-        System.err.println("Runtime Error: " + message);
-        hadError = true;
+    public static void runtimeError(RuntimeError error) {
+        System.err.println(error.getMessage() + "\n[line " + error.token().line() + "]");
+        hadRuntimeError = true;
     }
 
     private static void report(int line, String where, String message) {
