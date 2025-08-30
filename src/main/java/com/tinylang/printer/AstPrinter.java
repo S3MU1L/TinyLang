@@ -146,4 +146,9 @@ public class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
     public String visitLiteralExpr(Expr.LiteralExpr expr) {
         return expr.value != null ? expr.value.toString() : "nil";
     }
+
+    @Override
+    public String visitLogicalExpr(Expr.Logical logical) {
+        return "(" + logical.operator + " " + print(logical.left) + " " + print(logical.right) + ")";
+    }
 }

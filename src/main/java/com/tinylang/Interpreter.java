@@ -4,6 +4,7 @@ import com.tinylang.ast.Expr;
 import com.tinylang.ast.Stmt;
 import com.tinylang.error.RuntimeError;
 import com.tinylang.token.Token;
+import com.tinylang.token.TokenType;
 
 import java.util.List;
 
@@ -118,6 +119,17 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Object visitLiteralExpr(Expr.LiteralExpr expr) {
         return expr.value;
+    }
+
+    @Override
+    public Object visitLogicalExpr(Expr.Logical logical) {
+        Object left = evaluate(logical.left);
+        if (logical.operator.type() == TokenType.OR) {
+            if (isTruthy(left)) return left;
+        } else {
+            if (!isTruthy(left)) return left;
+        }
+        return evaluate(logical.right);
     }
 
     @Override
@@ -245,5 +257,11 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             return text;
         }
         return object.toString();
+    }
+
+    public void interpret(List<Stmt> statements) {
+        for (Stmt statement : statements) {
+            execute(statement);
+        }
     }
 }

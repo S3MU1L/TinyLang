@@ -136,6 +136,7 @@ public class Lexer {
     private void string() {
         while (peek() != '"' && !isAtEnd()) {
             if (peek() == '\n') line++;
+            advance();
         }
 
         if (isAtEnd()) {
@@ -143,6 +144,7 @@ public class Lexer {
             return;
         }
 
+        advance();
         addToken(TokenType.STRING, content.substring(start + 1, current - 1));
     }
 

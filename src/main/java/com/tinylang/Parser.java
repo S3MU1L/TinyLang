@@ -209,7 +209,7 @@ public class Parser {
         while (match(TokenType.OR)) {
             Token operator = previous();
             Expr right = logicalAnd();
-            expr = new Expr.BinaryExpr(expr, operator, right);
+            expr = new Expr.Logical(expr, operator, right);
         }
         return expr;
     }
@@ -219,7 +219,7 @@ public class Parser {
         while (match(TokenType.AND)) {
             Token operator = previous();
             Expr right = equality();
-            expr = new Expr.BinaryExpr(expr, operator, right);
+            expr = new Expr.Logical(expr, operator, right);
         }
         return expr;
     }
