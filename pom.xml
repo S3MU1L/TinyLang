@@ -57,12 +57,13 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.TinyLang</mainClass>
+                            <mainClass>com.tinylang.TinyLang</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
             </plugin>
         </plugins>
+        <finalName>tlang</finalName>
     </build>
 
 
