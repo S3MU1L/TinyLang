@@ -45,7 +45,6 @@ public class TinyLang {
 
         if (hadError) return;
 
-
         AstPrinter.print(statements);
     }
 
