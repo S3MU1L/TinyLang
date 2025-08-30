@@ -20,7 +20,7 @@ public class TinyLang {
     private static boolean hadError = false;
     private static boolean hadRuntimeError = false;
 
-    public static void main(String[] args) throws FileNotFoundException {
+    public static void main(String[] args) throws IOException {
         if (args.length > 1) {
             System.err.println("Usage: tlang <source-file>");
             return;
@@ -31,6 +31,22 @@ public class TinyLang {
         }
     }
 
+    private static void run(String source, boolean isRepl) {
+        Lexer lexer = new Lexer(source);
+        List<Token> tokens = lexer.scanTokens();
+        Parser parser = new Parser(tokens);
+        List<Stmt> statements = parser.parse();
+        if (hadError) return;
+
+        /* AstPrinter.print(statements); // Uncomment to print the AST */
+        if (isRepl && statements.size() == 1 && statements.get(0) instanceof Stmt.Expression exprStmt) {
+            interpreter.interpret(exprStmt.expression);
+            return;
+        }
+        interpreter.interpret(statements);
+        if (hadRuntimeError) System.exit(2);
+    }
+
     private static void runFile(String filePath) {
         Path path = getPath(filePath);
         if (path == null || !TLangFileValidator.isValidTLangFile(path)) {
@@ -39,19 +55,21 @@ public class TinyLang {
         }
 
         String content = readFile(path);
-        Lexer lexer = new Lexer(content);
-        List<Token> tokens = lexer.scanTokens();
-        Parser parser = new Parser(tokens);
-        List<Stmt> statements = parser.parse();
-        if (hadError) System.exit(1);
-        AstPrinter.print(statements);
-
-//        interpreter.interpret();
-        if (hadRuntimeError) System.exit(2);
+        run(content, false);
     }
 
-    private static void runPrompt() {
-        return;
+    private static void runPrompt() throws IOException {
+        InputStreamReader isr = new InputStreamReader(System.in);
+        BufferedReader reader = new BufferedReader(isr);
+
+        while (true) {
+            System.out.print("> ");
+            String line;
+            line = reader.readLine();
+            if (line == null || line.equalsIgnoreCase("exit")) break;
+            run(line, true);
+            hadError = false;
+        }
     }
 
     private static Path getPath(String arg) {
