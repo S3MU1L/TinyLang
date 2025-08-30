@@ -19,7 +19,7 @@ public class Lexer {
         keywords.put("else", ELSE);
         keywords.put("false", FALSE);
         keywords.put("for", FOR);
-        keywords.put("fn", FUN);
+        keywords.put("fn", FN);
         keywords.put("if", IF);
         keywords.put("nil", NIL);
         keywords.put("or", OR);
