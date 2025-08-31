@@ -92,10 +92,11 @@ comparison    ::= term ( ( ">" | ">=" | "<" | "<=" ) term )*
  
 term          ::= factor ( ( "-" | "+" ) factor )* 
  
-factor        ::= unary ( ( "/" | "*" | "%" ) unary )*
- 
-unary         ::= ( "!" | "-" ) unary 
-                | call 
+factor        ::= power ( ( "/" | "*" | "%" ) power )*
+
+power         ::= unary ( "**" unary )*
+
+unary         ::= ( "!" | "-" ) unary | call 
 
 call          ::= primary ( "(" arguments? ")" | "." IDENT )* 
 

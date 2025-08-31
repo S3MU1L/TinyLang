@@ -65,7 +65,8 @@ public class Lexer {
             case '-' -> addToken(TokenType.MINUS);
             case '+' -> addToken(TokenType.PLUS);
             case ';' -> addToken(TokenType.SEMICOLON);
-            case '*' -> addToken(TokenType.STAR);
+            case '%' -> addToken(TokenType.PERCENT);
+            case '*' -> addToken(match('*') ? TokenType.STAR_STAR : TokenType.STAR);
             case '!' -> addToken(match('=') ? TokenType.BANG_EQUAL : TokenType.BANG);
             case '=' -> addToken(match('=') ? TokenType.EQUAL_EQUAL : TokenType.EQUAL);
             case '<' -> addToken(match('=') ? TokenType.LESS_EQUAL : TokenType.LESS);
