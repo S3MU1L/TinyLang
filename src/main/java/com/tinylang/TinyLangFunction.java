@@ -7,8 +7,8 @@ import java.util.List;
 
 public class TinyLangFunction implements TinyLangCallable {
 
-    private Stmt.Function declaration;
-    private Environment closure;
+    private final Stmt.Function declaration;
+    private final Environment closure;
 
     public TinyLangFunction(Stmt.Function declaration, Environment closure) {
         this.declaration = declaration;
@@ -27,7 +27,7 @@ public class TinyLangFunction implements TinyLangCallable {
             environment.define(declaration.params.get(i), arguments.get(i));
         }
         try {
-            interpreter.executeBlock(declaration.body.statements, environment);
+            interpreter.executeBlock(declaration.body, environment);
         } catch (Return returnValue) {
             return returnValue.value();
         }
