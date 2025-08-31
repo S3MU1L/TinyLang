@@ -2,10 +2,12 @@ package com.tinylang;
 
 import com.tinylang.ast.Expr;
 import com.tinylang.ast.Stmt;
+import com.tinylang.error.Return;
 import com.tinylang.error.RuntimeError;
 import com.tinylang.token.Token;
 import com.tinylang.token.TokenType;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
@@ -39,6 +41,10 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
                     throw new RuntimeError(expr.operator, "Division by zero.");
                 }
                 return (Double) left / (Double) right;
+            }
+            case STAR_STAR -> {
+                checkNumberOperands(expr.operator, left, right);
+                return Math.pow((Double) left, (Double) right);
             }
             case GREATER -> {
                 checkNumberOperands(expr.operator, left, right);
@@ -101,8 +107,20 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Object visitCallExpr(Expr.CallExpr expr) {
-        // TODO
-        return null;
+        Object calle = evaluate(expr.callee);
+        List<Object> arguments = new ArrayList<>();
+        for (Expr argument : expr.arguments) {
+            arguments.add(evaluate(argument));
+        }
+        if (!(calle instanceof TinyLangCallable function)) {
+            throw new RuntimeError(expr.paren, "Can only call functions and classes.");
+        }
+
+        if (arguments.size() != function.arity()) {
+            throw new RuntimeError(expr.paren, "Expected " + function.arity() + " arguments but got " + arguments.size() + ".");
+        }
+
+        return function.call(this, arguments);
     }
 
     @Override
@@ -112,8 +130,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Object visitFunctionExpr(Expr.Function expr) {
-        // TODO
-        return null;
+        return AnonymousFunctionAdapter.adapt(expr, environment);
     }
 
     @Override
@@ -168,8 +185,12 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitReturnStmt(Stmt.Return stmt) {
-        // TODO
-        return null;
+        Object value = null;
+        if (stmt.value != null) {
+            value = evaluate(stmt.value);
+        }
+
+        throw new Return(value);
     }
 
     @Override
@@ -180,11 +201,14 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitClassStmt(Stmt.Class stmt) {
+        // TODO implement classes
         return null;
     }
 
     @Override
     public Void visitFunctionStmt(Stmt.Function stmt) {
+        TinyLangFunction function = new TinyLangFunction(stmt, environment);
+        environment.define(stmt.name, function);
         return null;
     }
 
@@ -219,8 +243,9 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         }
     }
 
-    private void executeBlock(List<Stmt> statements, Environment environment) {
+    public void executeBlock(List<Stmt> statements, Environment environment) {
         Environment previous = this.environment;
+        this.environment = environment;
         try {
             for (Stmt statement : statements) {
                 execute(statement);
