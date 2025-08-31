@@ -83,7 +83,11 @@ public class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
                 builder.append(" ");
             }
         }
-        builder.append(") ").append(print(stmt.body)).append(")");
+        builder.append(") ");
+        for (Stmt bodyStmt : stmt.body) {
+            builder.append(print(bodyStmt)).append(" ");
+        }
+        builder.append(")");
         return builder.toString();
     }
 
@@ -138,7 +142,12 @@ public class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
                 builder.append(" ");
             }
         }
-        builder.append(") ").append(print(expr.body)).append(")");
+        builder.append(") ");
+        for (Stmt bodyStmt : expr.body) {
+            builder.append(print(bodyStmt)).append(" ");
+        }
+        builder.append(")");
+
         return builder.toString();
     }
 
