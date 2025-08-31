@@ -151,9 +151,9 @@ public abstract class Expr {
 
     public static class Function extends Expr {
         public final List<String> params;
-        public final Stmt.Block body;
+        public final List<Stmt> body;
 
-        public Function(List<String> params, Stmt.Block body) {
+        public Function(List<String> params, List<Stmt> body) {
             this.params = params;
             this.body = body;
         }
