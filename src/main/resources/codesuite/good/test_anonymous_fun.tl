@@ -6,3 +6,4 @@ let fact = fn(n) {
   }
 };
 
+print fact( 5 );

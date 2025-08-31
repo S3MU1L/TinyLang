@@ -38,6 +38,10 @@ public class TinyLang {
         List<Stmt> statements = parser.parse();
         if (hadError) return;
 
+        Resolver resolver = new Resolver(interpreter);
+        resolver.resolve(statements);
+        if (hadError) return;
+
         /* AstPrinter.print(statements); // Uncomment to print the AST */
         if (isRepl && statements.size() == 1 && statements.get(0) instanceof Stmt.Expression exprStmt) {
             interpreter.interpret(exprStmt.expression);
@@ -87,6 +91,10 @@ public class TinyLang {
             System.err.println("An error has occurred while reading the file: " + path);
             return null;
         }
+    }
+
+    public static void error(String message) {
+        report(0, "", message);
     }
 
     public static void error(int line, String message) {
