@@ -48,4 +48,20 @@ public class Environment {
     public String toString() {
         return values.toString();
     }
+
+    public Object getAt(Integer distance, String name) {
+        return ancestor(distance).values.get(name);
+    }
+
+    private Environment ancestor(Integer distance) {
+        Environment current = this;
+        for (int i = 0; i < distance; i++) {
+            current = current.enclosing;
+        }
+        return current;
+    }
+
+    public void assignAt(Integer distance, Token name, Object value) {
+        ancestor(distance).values.put(name.lexeme(), value);
+    }
 }
