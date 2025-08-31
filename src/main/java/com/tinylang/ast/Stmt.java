@@ -59,9 +59,9 @@ public abstract class Stmt {
     public static class Function extends Stmt {
         public final String name;
         public final List<String> params;
-        public final Stmt body;
+        public final Stmt.Block body;
 
-        public Function(String name, List<String> params, Stmt body) {
+        public Function(String name, List<String> params, Stmt.Block body) {
             this.name = name;
             this.params = params;
             this.body = body;
