@@ -1,6 +1,7 @@
 ******# TinyLang Specification
 
-TinyLang is a minimal, educational programming language designed for writing a small interpreter. The goal is to keep the language small but expressive enough to support variables, arithmetic, control flow, and functions.
+TinyLang is a minimal, educational programming language designed for writing a small interpreter. The goal is to keep
+the language small but expressive enough to support variables, arithmetic, control flow, and functions.
 
 ---
 
@@ -13,13 +14,15 @@ TinyLang is a minimal, educational programming language designed for writing a s
 
 ### Literals
 
-* **Integer literals**: sequences of digits (e.g., `42`, `0`, `1234`)
+* **Number literals**: sequences of digits, optionally with a decimal part (e.g., `42`, `123.45`)
+* **String literals**: characters enclosed in double quotes (e.g., `"hello"`)
 * **Boolean literals**: `true`, `false`
+* **Nil literal**: `nil`
 
 ### Keywords
 
 ```
-let  fn  return  if  else  while  true  false
+let fn return if else for while true false class print super this and or nil
 ```
 
 ### Operators
@@ -39,42 +42,81 @@ let  fn  return  if  else  while  true  false
 (EBNF-style)
 
 ```
-program      ::= statement* EOF
+program       ::= declaration* EOF
 
-statement    ::= letStmt
-               | exprStmt
-               | ifStmt
-               | whileStmt
-               | returnStmt
-               | block
+declaration   ::= classDecl 
+                | funDecl 
+                | varDecl 
+                | statement
 
-letStmt      ::= "let" IDENT "=" expression ";"
-exprStmt     ::= expression ";"
-ifStmt       ::= "if" "(" expression ")" statement ("else" statement)?
-whileStmt    ::= "while" "(" expression ")" statement
-returnStmt   ::= "return" expression? ";"
-block        ::= "{" statement* "}"
+classDecl     ::= "class" IDENT "{" function* "}" 
 
-expression   ::= assignment
-assignment   ::= IDENT "=" assignment
-               | logic_or
+funDecl       ::= "fn" function 
 
-logic_or     ::= logic_and ("||" logic_and)*
-logic_and    ::= equality ("&&" equality)*
-equality     ::= comparison (("==" | "!=") comparison)*
-comparison   ::= term (("<" | "<=" | ">" | ">=") term)*
-term         ::= factor (("+" | "-") factor)*
-factor       ::= unary (("*" | "/") unary)*
-unary        ::= ("-" | "!") unary | primary
-primary      ::= INTEGER
-               | BOOLEAN
-               | IDENT
-               | "(" expression ")"
-               | function
+varDecl       ::= "let" IDENT ("=" expression)? ";"
 
-function     ::= "fn" "(" parameters? ")" block
-parameters   ::= IDENT ("," IDENT)*
-arguments    ::= expression ("," expression)*
+statement     ::= exprStmt 
+                | forStmt 
+                | ifStmt 
+                | printStmt 
+                | returnStmt 
+                | whileStmt 
+                | block
+
+exprStmt      ::= expression ";" 
+
+forStmt       ::= "for" "(" ( varDecl | exprStmt | ";" ) expression? ";" expression? ")" statement 
+
+ifStmt        ::= "if" "(" expression ")" statement ( "else" statement )? 
+
+printStmt     ::= "print" expression ";" 
+
+returnStmt    ::= "return" expression? ";" 
+
+whileStmt     ::= "while" "(" expression ")" statement 
+
+block         ::= "{" declaration* "}"
+
+expression    ::= assignment 
+
+assignment    ::= ( call "." )? IDENT "=" assignment 
+                | logic_or 
+
+logic_or      ::= logic_and ( "or" logic_and )* 
+
+logic_and     ::= equality ( "and" equality )* 
+
+equality      ::= comparison ( ( "!=" | "==" ) comparison )* 
+
+comparison    ::= term ( ( ">" | ">=" | "<" | "<=" ) term )*
+ 
+term          ::= factor ( ( "-" | "+" ) factor )* 
+ 
+factor        ::= power ( ( "/" | "*" | "%" ) power )*
+
+power         ::= unary ( "**" unary )*
+
+unary         ::= ( "!" | "-" ) unary | call 
+
+call          ::= primary ( "(" arguments? ")" | "." IDENT )* 
+
+primary       ::= "true" 
+                | "false" 
+                | "nil" 
+                | "this" 
+                | NUMBER 
+                | STRING 
+                | IDENT 
+                | "(" expression ")" 
+                | "super" "." IDENT
+                | "fn" "(" parameters? ")" block
+
+function      ::= IDENT "(" parameters? ")" block 
+
+parameters    ::= IDENT ( "," IDENT )* 
+
+arguments     ::= expression ( "," expression )*
+
 ```
 
 ---
@@ -93,7 +135,7 @@ arguments    ::= expression ("," expression)*
 
 ### Functions
 
-* Declared inline using `fn`
+* Declared with `fn`
 * Functions are **first-class values**
 * Example:
 
@@ -130,7 +172,7 @@ arguments    ::= expression ("," expression)*
 * Example:
 
   ```
-  let flag = (x > 0) && (y < 10);
+  let flag = (x > 0) and (y < 10);
   ```
 
 ---
