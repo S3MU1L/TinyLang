@@ -71,7 +71,7 @@ public class Parser {
         consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.");
         consume(TokenType.LEFT_BRACE, "Expect '{' before " + kind + " body.");
         List<Stmt> body = block();
-        return new Stmt.Function(name.lexeme(), parameters, new Stmt.Block(body));
+        return new Stmt.Function(name.lexeme(), parameters, body);
     }
 
     private Stmt varDeclaration() {
@@ -342,7 +342,7 @@ public class Parser {
         consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.");
         consume(TokenType.LEFT_BRACE, "Expect '{' before function body.");
         List<Stmt> body = block();
-        return new Expr.Function(parameters, new Stmt.Block(body));
+        return new Expr.Function(parameters, body);
     }
 
     private boolean match(TokenType... tokenTypes) {
