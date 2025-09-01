@@ -4,7 +4,6 @@ import com.tinylang.ast.Expr;
 import com.tinylang.ast.Stmt;
 import com.tinylang.error.Return;
 import com.tinylang.error.RuntimeError;
-import com.tinylang.printer.AstPrinter;
 import com.tinylang.token.Token;
 import com.tinylang.token.TokenType;
 
@@ -118,12 +117,24 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Object visitCallExpr(Expr.CallExpr expr) {
-        Object calle = evaluate(expr.callee);
+        Object callee = evaluate(expr.callee);
         List<Object> arguments = new ArrayList<>();
         for (Expr argument : expr.arguments) {
             arguments.add(evaluate(argument));
         }
-        if (!(calle instanceof TinyLangCallable function)) {
+
+        if (callee instanceof TinyLangClass klass) {
+            TinyLangInstance instance = new TinyLangInstance(klass);
+            TinyLangFunction initializer = klass.findMethod("init");
+            if (initializer != null) {
+                initializer.bind(instance).call(this, arguments);
+            } else if (!arguments.isEmpty()) {
+                throw new RuntimeError(expr.paren, "Expected 0 arguments but got " + arguments.size() + ".");
+            }
+            return instance;
+        }
+
+        if (!(callee instanceof TinyLangCallable function)) {
             throw new RuntimeError(expr.paren, "Can only call functions and classes.");
         }
         if (arguments.size() != function.arity()) {
@@ -156,6 +167,31 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             if (!isTruthy(left)) return left;
         }
         return evaluate(logical.right);
+    }
+
+    @Override
+    public Object visitGetExpr(Expr.GetExpr expr) {
+        Object object = evaluate(expr.object);
+        if (object instanceof TinyLangInstance instance) {
+            return instance.get(expr.name);
+        }
+        throw new RuntimeError(expr.name, "Only instances have properties.");
+    }
+
+    @Override
+    public Object visitSetExpr(Expr.SetExpr setExpr) {
+        Object object = evaluate(setExpr.object);
+        if (!(object instanceof TinyLangInstance instance)) {
+            throw new RuntimeError(setExpr.name, "Only instances have fields.");
+        }
+        Object value = evaluate(setExpr.value);
+        instance.set(setExpr.name.lexeme(), value);
+        return value;
+    }
+
+    @Override
+    public Object visitThisExpr(Expr.ThisExpr thisExpr) {
+        return lookupVariable(thisExpr.keyword, thisExpr);
     }
 
     @Override
@@ -209,13 +245,20 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitClassStmt(Stmt.Class stmt) {
-        // TODO implement classes
+        environment.define(stmt.name.lexeme(), null);
+        Map<String, TinyLangFunction> methods = new HashMap<>();
+        for (Stmt.Function method : stmt.methods) {
+            TinyLangFunction function = new TinyLangFunction(method, environment, method.name.equals("init"));
+            methods.put(method.name, function);
+        }
+        TinyLangClass klass = new TinyLangClass(stmt.name.lexeme(), methods);
+        environment.assign(stmt.name, klass);
         return null;
     }
 
     @Override
     public Void visitFunctionStmt(Stmt.Function stmt) {
-        TinyLangFunction function = new TinyLangFunction(stmt, environment);
+        TinyLangFunction function = new TinyLangFunction(stmt, environment, false);
         environment.define(stmt.name, function);
         return null;
     }

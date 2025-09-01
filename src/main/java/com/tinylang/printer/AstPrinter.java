@@ -160,4 +160,19 @@ public class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
     public String visitLogicalExpr(Expr.Logical logical) {
         return "(" + logical.operator + " " + print(logical.left) + " " + print(logical.right) + ")";
     }
+
+    @Override
+    public String visitGetExpr(Expr.GetExpr getExpr) {
+        return "(get " + print(getExpr.object) + " " + getExpr.name + ")";
+    }
+
+    @Override
+    public String visitSetExpr(Expr.SetExpr setExpr) {
+        return "(set " + print(setExpr.object) + " " + setExpr.name + " " + print(setExpr.value) + ")";
+    }
+
+    @Override
+    public String visitThisExpr(Expr.ThisExpr thisExpr) {
+        return "this";
+    }
 }

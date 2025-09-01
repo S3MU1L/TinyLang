@@ -11,6 +11,6 @@ public class AnonymousFunctionAdapter {
         String functionName = "<anonymous$" + counter + ">";
         Stmt.Function functionStmt = new Stmt.Function(functionName, expr.params, expr.body);
         counter++;
-        return new TinyLangFunction(functionStmt, env);
+        return new TinyLangFunction(functionStmt, env, false);
     }
 }
