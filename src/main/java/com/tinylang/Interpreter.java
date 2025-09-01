@@ -198,6 +198,18 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Object visitSuperExpr(Expr.Super superExpr) {
+        int distance = locals.get(superExpr);
+        TinyLangClass superclass = (TinyLangClass) environment.getAt(distance, "super");
+        TinyLangInstance instance = (TinyLangInstance) environment.getAt(distance - 1, "this");
+        TinyLangFunction method = superclass.findMethod(superExpr.method.lexeme());
+        if (method == null) {
+            throw new RuntimeError(superExpr.method, "Undefined superclass method '" + superExpr.method.lexeme() + "'.");
+        }
+        return method.bind(instance);
+    }
+
+    @Override
     public Void visitLetStmt(Stmt.Let stmt) {
         Object value = null;
         if (stmt.initializer != null) {
@@ -251,6 +263,26 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         environment.define(stmt.name.lexeme(), null);
         Map<String, TinyLangFunction> methods = new HashMap<>();
         Map<String, TinyLangFunction> staticMethods = new HashMap<>();
+        Object superclass = null;
+
+        if (stmt.superclass != null) {
+            superclass = evaluate(stmt.superclass);
+            if (!(superclass instanceof TinyLangClass)) {
+                throw new RuntimeError(stmt.superclass.name, "Superclass must be a class.");
+            }
+        }
+
+        if (stmt.superclass != null) {
+            if (stmt.name.lexeme().equals(stmt.superclass.name.lexeme())) {
+                throw new RuntimeError(stmt.superclass.name, "A class can't inherit from itself.");
+            }
+        }
+
+        if (superclass != null) {
+            environment = new Environment(environment);
+            environment.define("super", superclass);
+        }
+
         for (Stmt.Function method : stmt.methods) {
             TinyLangFunction function = new TinyLangFunction(method, environment, method.name.equals("init"));
             if (method.isStatic()) {
@@ -259,7 +291,10 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
                 methods.put(method.name, function);
             }
         }
-        TinyLangClass klass = new TinyLangClass(stmt.name.lexeme(), methods, staticMethods);
+        TinyLangClass klass = new TinyLangClass(stmt.name.lexeme(), superclass, methods, staticMethods);
+        if (superclass != null) {
+            environment = environment.enclosing();
+        }
         environment.assign(stmt.name, klass);
         return null;
     }

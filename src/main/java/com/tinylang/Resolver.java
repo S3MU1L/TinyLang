@@ -107,10 +107,21 @@ public class Resolver implements Stmt.Visitor<Void>, Expr.Visitor<Void> {
     @Override
     public Void visitThisExpr(Expr.ThisExpr thisExpr) {
         if (currentClassType == ClassType.NULL) {
-            TinyLang.error("Can't use 'this' outside of a class.");
+            TinyLang.error(thisExpr.keyword, "Can't use 'this' outside of a class.");
             return null;
         }
         resolveLocal(thisExpr, thisExpr.keyword);
+        return null;
+    }
+
+    @Override
+    public Void visitSuperExpr(Expr.Super superExpr) {
+        if (currentClassType == ClassType.NULL) {
+            TinyLang.error(superExpr.keyword, "Can't use 'super' outside of a class.");
+        } else if (currentClassType != ClassType.SUBCLASS) {
+            TinyLang.error(superExpr.keyword, "Can't use 'super' in a class with no superclass.");
+        }
+        resolveLocal(superExpr, superExpr.keyword);
         return null;
     }
 
@@ -175,16 +186,34 @@ public class Resolver implements Stmt.Visitor<Void>, Expr.Visitor<Void> {
         currentClassType = ClassType.CLASS;
         declare(stmt.name.lexeme());
         define(stmt.name.lexeme());
+        if (stmt.superclass != null && stmt.name.lexeme().equals(stmt.superclass.name.lexeme())) {
+            TinyLang.error("A class can't inherit from itself.");
+        }
+        if (stmt.superclass != null) {
+            currentClassType = ClassType.SUBCLASS;
+            resolve(stmt.superclass);
+        }
+
+        if (stmt.superclass != null) {
+            beginScope();
+            scopes.peek().put("super", true);
+        }
+
         beginScope();
         scopes.peek().put("this", true);
         for (Stmt.Function method : stmt.methods) {
-            FunctionType type = method.name.equals("init") ? FunctionType.INITIALIZER : FunctionType.METHOD;
-            resolveFunction(method, type);
+            FunctionType declaration = FunctionType.FUNCTION;
+            if (method.name.equals("init")) {
+                declaration = FunctionType.INITIALIZER;
+            }
+            resolveFunction(method, declaration);
         }
         endScope();
+        if (stmt.superclass != null) endScope();
         currentClassType = enclosingClassType;
         return null;
     }
+
 
     @Override
     public Void visitFunctionStmt(Stmt.Function stmt) {
