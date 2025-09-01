@@ -1,9 +1,15 @@
-******# TinyLang Specification
+# TinyLang Specification
 
-TinyLang is a minimal, educational programming language designed for writing a small interpreter. The goal is to keep
-the language small but expressive enough to support variables, arithmetic, control flow, and functions.
+TinyLang is a minimal, educational programming language designed for learning and writing interpreters. 
+It supports variables, arithmetic, control flow, functions, classes, and inheritance.
 
 ---
+## Features
+* Variables and assignment
+* Arithmetic and boolean expressions
+* Control flow: `if`, `else`, `while`, `for`
+* Functions and first-class functions
+* Classes and single inheritance
 
 ## Lexical Structure
 
@@ -49,7 +55,11 @@ declaration   ::= classDecl
                 | varDecl 
                 | statement
 
-classDecl     ::= "class" IDENT "{" function* "}" 
+classDecl     ::= class IDENT ( "extends" IDENT )? "{" classMember* "}"
+
+classMember   ::= classFunction | function
+
+classFunction ::= "class" function
 
 funDecl       ::= "fn" function 
 
@@ -165,8 +175,8 @@ arguments     ::= expression ( "," expression )*
     x = x - 1;
   }
   ```
-
-### Expressions
+  
+## Expressions
 
 * Support standard arithmetic and boolean operators
 * Example:
@@ -175,21 +185,69 @@ arguments     ::= expression ( "," expression )*
   let flag = (x > 0) and (y < 10);
   ```
 
+## Classes and Inheritance
+* Declared with `class`
+* Support single inheritance with `extends`
+* Example:
+```
+    class Animal {
+        fn speak() {
+            print "Animal sound";
+        }
+    }
+    class Dog extends Animal {
+        fn speak() {
+            print "Woof!";
+        }
+    }
+```  
+## Lambda and Closures
+* Anonymous functions can be created using `fn`
+* Support closures, capturing variables from the surrounding scope
+* Example:
+```
+let makeCounter = fn() {
+  let count = 0;
+  return fn() {
+    count = count + 1;
+    return count;
+  };
+};
+let counter = makeCounter();
+print counter(); // 1
+print counter(); // 2
+```
+
+
 ---
 
 ## Example Program
 
 ```
-// Compute factorial
-let fact = fn(n) {
-  if (n == 0) {
-    return 1;
-  } else {
-    return n * fact(n - 1);
-  }
-};
+class Person {
+    init(name, age) {
+        this.name = name;
+        this.age = age;
+    }
 
-let result = fact(5);
+    greet() {
+        print "Hello, my name is " + this.name + " and I am " + this.age + " years old.";
+    }
+}
+
+class Employee extends Person {
+    init(name, age, position) {
+        super.init(name, age);
+        this.position = position;
+    }
+
+    work() {
+        print "I am working as a " + this.position + ".";
+    }
+}
+
+let john = Person("John", 30);
+john.greet();
 ```
 
 ---

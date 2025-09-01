@@ -30,6 +30,7 @@ public class Lexer {
         keywords.put("true", TRUE);
         keywords.put("while", WHILE);
         keywords.put("let", LET);
+        keywords.put("extends", EXTENDS);
     }
 
     private int start = 0;

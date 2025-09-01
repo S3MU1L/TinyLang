@@ -25,6 +25,14 @@ public abstract class Expr {
         R visitLiteralExpr(LiteralExpr expr);
 
         R visitLogicalExpr(Logical logical);
+
+        R visitGetExpr(GetExpr getExpr);
+
+        R visitSetExpr(SetExpr setExpr);
+
+        R visitThisExpr(ThisExpr thisExpr);
+
+        R visitSuperExpr(Super superExpr);
     }
 
     public abstract <R> R accept(Visitor<R> visitor);
@@ -149,6 +157,51 @@ public abstract class Expr {
         }
     }
 
+    public static class GetExpr extends Expr {
+        public final Expr object;
+        public final Token name;
+
+        public GetExpr(Expr object, Token name) {
+            this.object = object;
+            this.name = name;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitGetExpr(this);
+        }
+    }
+
+    public static class SetExpr extends Expr {
+        public final Expr object;
+        public final Token name;
+        public final Expr value;
+
+        public SetExpr(Expr object, Token name, Expr value) {
+            this.object = object;
+            this.name = name;
+            this.value = value;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitSetExpr(this);
+        }
+    }
+
+    public static class ThisExpr extends Expr {
+        public final Token keyword;
+
+        public ThisExpr(Token keyword) {
+            this.keyword = keyword;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitThisExpr(this);
+        }
+    }
+
     public static class Function extends Expr {
         public final List<String> params;
         public final List<Stmt> body;
@@ -161,6 +214,21 @@ public abstract class Expr {
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitFunctionExpr(this);
+        }
+    }
+
+    public static class Super extends Expr {
+        public final Token keyword;
+        public final Token method;
+
+        public Super(Token keyword, Token method) {
+            this.keyword = keyword;
+            this.method = method;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitSuperExpr(this);
         }
     }
 }

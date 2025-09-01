@@ -1,5 +1,7 @@
 package com.tinylang.ast;
 
+import com.tinylang.token.Token;
+
 import java.util.List;
 
 public abstract class Stmt {
@@ -42,11 +44,13 @@ public abstract class Stmt {
     }
 
     public static class Class extends Stmt {
-        public final String name;
+        public final Token name;
+        public final Expr.VarExpr superclass;
         public final List<Stmt.Function> methods;
 
-        public Class(String name, List<Stmt.Function> methods) {
+        public Class(Token name, Expr.VarExpr superclass, List<Stmt.Function> methods) {
             this.name = name;
+            this.superclass = superclass;
             this.methods = methods;
         }
 
@@ -60,11 +64,17 @@ public abstract class Stmt {
         public final String name;
         public final List<String> params;
         public final List<Stmt> body;
+        private final boolean isStatic;
 
-        public Function(String name, List<String> params, List<Stmt> body) {
+        public Function(String name, List<String> params, List<Stmt> body, boolean isStatic) {
             this.name = name;
             this.params = params;
             this.body = body;
+            this.isStatic = isStatic;
+        }
+
+        public boolean isStatic() {
+            return isStatic;
         }
 
         @Override

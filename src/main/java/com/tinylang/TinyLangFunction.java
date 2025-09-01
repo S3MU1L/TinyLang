@@ -9,10 +9,12 @@ public class TinyLangFunction implements TinyLangCallable {
 
     private final Stmt.Function declaration;
     private final Environment closure;
+    private final boolean isInitializer;
 
-    public TinyLangFunction(Stmt.Function declaration, Environment closure) {
+    public TinyLangFunction(Stmt.Function declaration, Environment closure, boolean isInitializer) {
         this.declaration = declaration;
         this.closure = closure;
+        this.isInitializer = isInitializer;
     }
 
     @Override
@@ -29,8 +31,17 @@ public class TinyLangFunction implements TinyLangCallable {
         try {
             interpreter.executeBlock(declaration.body, environment);
         } catch (Return returnValue) {
+            if (isInitializer) {
+                return closure.getAt(0, "this");
+            }
             return returnValue.value();
         }
         return null;
+    }
+
+    public TinyLangFunction bind(TinyLangInstance tinyLangInstance) {
+        Environment environment = new Environment(closure);
+        environment.define("this", tinyLangInstance);
+        return new TinyLangFunction(declaration, environment, isInitializer);
     }
 }

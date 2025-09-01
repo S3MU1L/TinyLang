@@ -4,7 +4,6 @@ import com.tinylang.ast.Expr;
 import com.tinylang.ast.Stmt;
 import com.tinylang.error.Return;
 import com.tinylang.error.RuntimeError;
-import com.tinylang.printer.AstPrinter;
 import com.tinylang.token.Token;
 import com.tinylang.token.TokenType;
 
@@ -118,12 +117,24 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Object visitCallExpr(Expr.CallExpr expr) {
-        Object calle = evaluate(expr.callee);
+        Object callee = evaluate(expr.callee);
         List<Object> arguments = new ArrayList<>();
         for (Expr argument : expr.arguments) {
             arguments.add(evaluate(argument));
         }
-        if (!(calle instanceof TinyLangCallable function)) {
+
+        if (callee instanceof TinyLangClass klass) {
+            TinyLangInstance instance = new TinyLangInstance(klass);
+            TinyLangFunction initializer = klass.findMethod("init");
+            if (initializer != null) {
+                initializer.bind(instance).call(this, arguments);
+            } else if (!arguments.isEmpty()) {
+                throw new RuntimeError(expr.paren, "Expected 0 arguments but got " + arguments.size() + ".");
+            }
+            return instance;
+        }
+
+        if (!(callee instanceof TinyLangCallable function)) {
             throw new RuntimeError(expr.paren, "Can only call functions and classes.");
         }
         if (arguments.size() != function.arity()) {
@@ -156,6 +167,46 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             if (!isTruthy(left)) return left;
         }
         return evaluate(logical.right);
+    }
+
+    @Override
+    public Object visitGetExpr(Expr.GetExpr expr) {
+        Object object = evaluate(expr.object);
+        if (object instanceof TinyLangInstance instance) {
+            return instance.get(expr.name);
+        }
+        if (object instanceof TinyLangClass klass) {
+            return klass.findMethod(expr.name.lexeme());
+        }
+        throw new RuntimeError(expr.name, "Only instances have properties.");
+    }
+
+    @Override
+    public Object visitSetExpr(Expr.SetExpr setExpr) {
+        Object object = evaluate(setExpr.object);
+        if (!(object instanceof TinyLangInstance instance)) {
+            throw new RuntimeError(setExpr.name, "Only instances have fields.");
+        }
+        Object value = evaluate(setExpr.value);
+        instance.set(setExpr.name.lexeme(), value);
+        return value;
+    }
+
+    @Override
+    public Object visitThisExpr(Expr.ThisExpr thisExpr) {
+        return lookupVariable(thisExpr.keyword, thisExpr);
+    }
+
+    @Override
+    public Object visitSuperExpr(Expr.Super superExpr) {
+        int distance = locals.get(superExpr);
+        TinyLangClass superclass = (TinyLangClass) environment.getAt(distance, "super");
+        TinyLangInstance instance = (TinyLangInstance) environment.getAt(distance - 1, "this");
+        TinyLangFunction method = superclass.findMethod(superExpr.method.lexeme());
+        if (method == null) {
+            throw new RuntimeError(superExpr.method, "Undefined superclass method '" + superExpr.method.lexeme() + "'.");
+        }
+        return method.bind(instance);
     }
 
     @Override
@@ -209,13 +260,48 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitClassStmt(Stmt.Class stmt) {
-        // TODO implement classes
+        environment.define(stmt.name.lexeme(), null);
+        Map<String, TinyLangFunction> methods = new HashMap<>();
+        Map<String, TinyLangFunction> staticMethods = new HashMap<>();
+        Object superclass = null;
+
+        if (stmt.superclass != null) {
+            superclass = evaluate(stmt.superclass);
+            if (!(superclass instanceof TinyLangClass)) {
+                throw new RuntimeError(stmt.superclass.name, "Superclass must be a class.");
+            }
+        }
+
+        if (stmt.superclass != null) {
+            if (stmt.name.lexeme().equals(stmt.superclass.name.lexeme())) {
+                throw new RuntimeError(stmt.superclass.name, "A class can't inherit from itself.");
+            }
+        }
+
+        if (superclass != null) {
+            environment = new Environment(environment);
+            environment.define("super", superclass);
+        }
+
+        for (Stmt.Function method : stmt.methods) {
+            TinyLangFunction function = new TinyLangFunction(method, environment, method.name.equals("init"));
+            if (method.isStatic()) {
+                staticMethods.put(method.name, function);
+            } else {
+                methods.put(method.name, function);
+            }
+        }
+        TinyLangClass klass = new TinyLangClass(stmt.name.lexeme(), superclass, methods, staticMethods);
+        if (superclass != null) {
+            environment = environment.enclosing();
+        }
+        environment.assign(stmt.name, klass);
         return null;
     }
 
     @Override
     public Void visitFunctionStmt(Stmt.Function stmt) {
-        TinyLangFunction function = new TinyLangFunction(stmt, environment);
+        TinyLangFunction function = new TinyLangFunction(stmt, environment, false);
         environment.define(stmt.name, function);
         return null;
     }

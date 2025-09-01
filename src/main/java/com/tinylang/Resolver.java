@@ -14,6 +14,7 @@ public class Resolver implements Stmt.Visitor<Void>, Expr.Visitor<Void> {
     private final Interpreter interpreter;
     private final Stack<Map<String, Boolean>> scopes = new Stack<>();
     private FunctionType currentFunctionType = FunctionType.NULL;
+    private ClassType currentClassType = ClassType.NULL;
 
     public Resolver(Interpreter interpreter) {
         this.interpreter = interpreter;
@@ -65,6 +66,8 @@ public class Resolver implements Stmt.Visitor<Void>, Expr.Visitor<Void> {
 
     @Override
     public Void visitFunctionExpr(Expr.Function expr) {
+        FunctionType enclosingFunction = currentFunctionType;
+        currentFunctionType = FunctionType.FUNCTION;
         beginScope();
         for (String param : expr.params) {
             declare(param);
@@ -72,6 +75,7 @@ public class Resolver implements Stmt.Visitor<Void>, Expr.Visitor<Void> {
         }
         resolve(expr.body);
         endScope();
+        currentFunctionType = enclosingFunction;
         return null;
     }
 
@@ -84,6 +88,40 @@ public class Resolver implements Stmt.Visitor<Void>, Expr.Visitor<Void> {
     public Void visitLogicalExpr(Expr.Logical logical) {
         resolve(logical.left);
         resolve(logical.right);
+        return null;
+    }
+
+    @Override
+    public Void visitGetExpr(Expr.GetExpr expr) {
+        resolve(expr.object);
+        return null;
+    }
+
+    @Override
+    public Void visitSetExpr(Expr.SetExpr setExpr) {
+        resolve(setExpr.value);
+        resolve(setExpr.object);
+        return null;
+    }
+
+    @Override
+    public Void visitThisExpr(Expr.ThisExpr thisExpr) {
+        if (currentClassType == ClassType.NULL) {
+            TinyLang.error(thisExpr.keyword, "Can't use 'this' outside of a class.");
+            return null;
+        }
+        resolveLocal(thisExpr, thisExpr.keyword);
+        return null;
+    }
+
+    @Override
+    public Void visitSuperExpr(Expr.Super superExpr) {
+        if (currentClassType == ClassType.NULL) {
+            TinyLang.error(superExpr.keyword, "Can't use 'super' outside of a class.");
+        } else if (currentClassType != ClassType.SUBCLASS) {
+            TinyLang.error(superExpr.keyword, "Can't use 'super' in a class with no superclass.");
+        }
+        resolveLocal(superExpr, superExpr.keyword);
         return null;
     }
 
@@ -125,6 +163,9 @@ public class Resolver implements Stmt.Visitor<Void>, Expr.Visitor<Void> {
         if (currentFunctionType == FunctionType.NULL) {
             TinyLang.error("Can't return from top-level code.");
         }
+        if (currentFunctionType == FunctionType.INITIALIZER) {
+            TinyLang.error("Can't return a value from an initializer.");
+        }
         if (stmt.value != null) {
             resolve(stmt.value);
         }
@@ -141,14 +182,44 @@ public class Resolver implements Stmt.Visitor<Void>, Expr.Visitor<Void> {
 
     @Override
     public Void visitClassStmt(Stmt.Class stmt) {
+        ClassType enclosingClassType = currentClassType;
+        currentClassType = ClassType.CLASS;
+        declare(stmt.name.lexeme());
+        define(stmt.name.lexeme());
+        if (stmt.superclass != null && stmt.name.lexeme().equals(stmt.superclass.name.lexeme())) {
+            TinyLang.error("A class can't inherit from itself.");
+        }
+        if (stmt.superclass != null) {
+            currentClassType = ClassType.SUBCLASS;
+            resolve(stmt.superclass);
+        }
+
+        if (stmt.superclass != null) {
+            beginScope();
+            scopes.peek().put("super", true);
+        }
+
+        beginScope();
+        scopes.peek().put("this", true);
+        for (Stmt.Function method : stmt.methods) {
+            FunctionType declaration = FunctionType.FUNCTION;
+            if (method.name.equals("init")) {
+                declaration = FunctionType.INITIALIZER;
+            }
+            resolveFunction(method, declaration);
+        }
+        endScope();
+        if (stmt.superclass != null) endScope();
+        currentClassType = enclosingClassType;
         return null;
     }
+
 
     @Override
     public Void visitFunctionStmt(Stmt.Function stmt) {
         declare(stmt.name);
         define(stmt.name);
-        resolveFunction(stmt);
+        resolveFunction(stmt, FunctionType.FUNCTION);
         return null;
     }
 
@@ -181,9 +252,9 @@ public class Resolver implements Stmt.Visitor<Void>, Expr.Visitor<Void> {
         expression.accept(this);
     }
 
-    private void resolveFunction(Stmt.Function stmt) {
+    private void resolveFunction(Stmt.Function stmt, FunctionType functionType) {
         FunctionType enclosingFunction = currentFunctionType;
-        currentFunctionType = FunctionType.FUNCTION;
+        currentFunctionType = functionType;
         beginScope();
         for (String param : stmt.params) {
             declare(param);

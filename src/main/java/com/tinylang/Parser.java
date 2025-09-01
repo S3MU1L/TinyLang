@@ -34,7 +34,7 @@ public class Parser {
             if (match(TokenType.CLASS)) return classDeclaration();
             if (check(TokenType.FN) && checkNext(TokenType.IDENTIFIER)) {
                 consume(TokenType.FN, "Expect 'fn'.");
-                return funDeclaration("function");
+                return funDeclaration("function", false);
             }
             if (match(TokenType.LET)) return varDeclaration();
             return statement();
@@ -46,17 +46,24 @@ public class Parser {
 
     private Stmt classDeclaration() {
         Token name = consume(TokenType.IDENTIFIER, "Expect class name.");
+        Expr.VarExpr superClass = null;
+        if (match(TokenType.EXTENDS)) {
+            consume(TokenType.IDENTIFIER, "Expect superclass name.");
+            superClass = new Expr.VarExpr(previous());
+        }
+
         consume(TokenType.LEFT_BRACE, "Expect '{' before class body.");
         List<Stmt.Function> methods = new ArrayList<>();
         while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
-            consume(TokenType.FN, "Expect 'fn' before class name.");
-            methods.add(funDeclaration("method"));
+            boolean isStatic = false;
+            if (match(TokenType.CLASS)) isStatic = true;
+            methods.add(funDeclaration("method", isStatic));
         }
         consume(TokenType.RIGHT_BRACE, "Expect '}' after class body.");
-        return new Stmt.Class(name.lexeme(), methods);
+        return new Stmt.Class(name, superClass, methods);
     }
 
-    private Stmt.Function funDeclaration(String kind) {
+    private Stmt.Function funDeclaration(String kind, boolean isStatic) {
         Token name = consume(TokenType.IDENTIFIER, "Expect " + kind + " name.");
         consume(TokenType.LEFT_PAREN, "Expect '(' after " + kind + " name.");
         List<String> parameters = new ArrayList<>();
@@ -71,7 +78,7 @@ public class Parser {
         consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.");
         consume(TokenType.LEFT_BRACE, "Expect '{' before " + kind + " body.");
         List<Stmt> body = block();
-        return new Stmt.Function(name.lexeme(), parameters, body);
+        return new Stmt.Function(name.lexeme(), parameters, body, isStatic);
     }
 
     private Stmt varDeclaration() {
@@ -198,8 +205,10 @@ public class Parser {
             if (expr instanceof Expr.VarExpr varExpr) {
                 Token name = varExpr.name;
                 return new Expr.AssignExpr(name, value);
+            } else if (expr instanceof Expr.GetExpr getExpr) {
+                return new Expr.SetExpr(getExpr.object, getExpr.name, value);
             }
-            error(equals, "Invalid assignment target.");
+            TinyLang.error(equals, "Invalid assignment target.");
         }
         return expr;
     }
@@ -288,6 +297,9 @@ public class Parser {
         while (true) {
             if (match(TokenType.LEFT_PAREN)) {
                 expr = finishCall(expr);
+            } else if (match(TokenType.DOT)) {
+                Token name = consume(TokenType.IDENTIFIER, "Expect property name after '.'.");
+                expr = new Expr.GetExpr(expr, name);
             } else {
                 break;
             }
@@ -316,9 +328,19 @@ public class Parser {
         if (match(TokenType.NUMBER, TokenType.STRING)) {
             return new Expr.LiteralExpr(previous().literal());
         }
+        if (match(TokenType.THIS)) {
+            return new Expr.ThisExpr(previous());
+        }
         if (match(TokenType.IDENTIFIER)) {
             return new Expr.VarExpr(previous());
         }
+        if (match(TokenType.SUPER)) {
+            Token keyword = previous();
+            consume(TokenType.DOT, "Expect '.' after 'super'.");
+            Token method = consume(TokenType.IDENTIFIER, "Expect superclass method name.");
+            return new Expr.Super(keyword, method);
+        }
+
         if (match(TokenType.LEFT_PAREN)) {
             Expr expr = expression();
             consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.");
