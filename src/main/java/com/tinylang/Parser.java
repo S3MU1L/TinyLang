@@ -49,11 +49,10 @@ public class Parser {
         consume(TokenType.LEFT_BRACE, "Expect '{' before class body.");
         List<Stmt.Function> methods = new ArrayList<>();
         while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
-            consume(TokenType.FN, "Expect 'fn' before class name.");
             methods.add(funDeclaration("method"));
         }
         consume(TokenType.RIGHT_BRACE, "Expect '}' after class body.");
-        return new Stmt.Class(name.lexeme(), methods);
+        return new Stmt.Class(name, methods);
     }
 
     private Stmt.Function funDeclaration(String kind) {
@@ -198,8 +197,10 @@ public class Parser {
             if (expr instanceof Expr.VarExpr varExpr) {
                 Token name = varExpr.name;
                 return new Expr.AssignExpr(name, value);
+            } else if (expr instanceof Expr.GetExpr getExpr) {
+                return new Expr.SetExpr(getExpr.object, getExpr.name, value);
             }
-            error(equals, "Invalid assignment target.");
+            TinyLang.error(equals, "Invalid assignment target.");
         }
         return expr;
     }
@@ -288,6 +289,9 @@ public class Parser {
         while (true) {
             if (match(TokenType.LEFT_PAREN)) {
                 expr = finishCall(expr);
+            } else if (match(TokenType.DOT)) {
+                Token name = consume(TokenType.IDENTIFIER, "Expect property name after '.'.");
+                expr = new Expr.GetExpr(expr, name);
             } else {
                 break;
             }
@@ -315,6 +319,9 @@ public class Parser {
         if (match(TokenType.NIL)) return new Expr.LiteralExpr(null);
         if (match(TokenType.NUMBER, TokenType.STRING)) {
             return new Expr.LiteralExpr(previous().literal());
+        }
+        if (match(TokenType.THIS)) {
+            return new Expr.ThisExpr(previous());
         }
         if (match(TokenType.IDENTIFIER)) {
             return new Expr.VarExpr(previous());

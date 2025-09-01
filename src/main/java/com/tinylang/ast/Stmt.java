@@ -1,5 +1,7 @@
 package com.tinylang.ast;
 
+import com.tinylang.token.Token;
+
 import java.util.List;
 
 public abstract class Stmt {
@@ -42,10 +44,10 @@ public abstract class Stmt {
     }
 
     public static class Class extends Stmt {
-        public final String name;
+        public final Token name;
         public final List<Stmt.Function> methods;
 
-        public Class(String name, List<Stmt.Function> methods) {
+        public Class(Token name, List<Stmt.Function> methods) {
             this.name = name;
             this.methods = methods;
         }
