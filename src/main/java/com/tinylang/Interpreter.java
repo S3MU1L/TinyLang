@@ -175,6 +175,9 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         if (object instanceof TinyLangInstance instance) {
             return instance.get(expr.name);
         }
+        if (object instanceof TinyLangClass klass) {
+            return klass.findMethod(expr.name.lexeme());
+        }
         throw new RuntimeError(expr.name, "Only instances have properties.");
     }
 
@@ -247,11 +250,16 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     public Void visitClassStmt(Stmt.Class stmt) {
         environment.define(stmt.name.lexeme(), null);
         Map<String, TinyLangFunction> methods = new HashMap<>();
+        Map<String, TinyLangFunction> staticMethods = new HashMap<>();
         for (Stmt.Function method : stmt.methods) {
             TinyLangFunction function = new TinyLangFunction(method, environment, method.name.equals("init"));
-            methods.put(method.name, function);
+            if (method.isStatic()) {
+                staticMethods.put(method.name, function);
+            } else {
+                methods.put(method.name, function);
+            }
         }
-        TinyLangClass klass = new TinyLangClass(stmt.name.lexeme(), methods);
+        TinyLangClass klass = new TinyLangClass(stmt.name.lexeme(), methods, staticMethods);
         environment.assign(stmt.name, klass);
         return null;
     }

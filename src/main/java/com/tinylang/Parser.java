@@ -34,7 +34,7 @@ public class Parser {
             if (match(TokenType.CLASS)) return classDeclaration();
             if (check(TokenType.FN) && checkNext(TokenType.IDENTIFIER)) {
                 consume(TokenType.FN, "Expect 'fn'.");
-                return funDeclaration("function");
+                return funDeclaration("function", false);
             }
             if (match(TokenType.LET)) return varDeclaration();
             return statement();
@@ -49,13 +49,15 @@ public class Parser {
         consume(TokenType.LEFT_BRACE, "Expect '{' before class body.");
         List<Stmt.Function> methods = new ArrayList<>();
         while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
-            methods.add(funDeclaration("method"));
+            boolean isStatic = false;
+            if (match(TokenType.CLASS)) isStatic = true;
+            methods.add(funDeclaration("method", isStatic));
         }
         consume(TokenType.RIGHT_BRACE, "Expect '}' after class body.");
         return new Stmt.Class(name, methods);
     }
 
-    private Stmt.Function funDeclaration(String kind) {
+    private Stmt.Function funDeclaration(String kind, boolean isStatic) {
         Token name = consume(TokenType.IDENTIFIER, "Expect " + kind + " name.");
         consume(TokenType.LEFT_PAREN, "Expect '(' after " + kind + " name.");
         List<String> parameters = new ArrayList<>();
@@ -70,7 +72,7 @@ public class Parser {
         consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.");
         consume(TokenType.LEFT_BRACE, "Expect '{' before " + kind + " body.");
         List<Stmt> body = block();
-        return new Stmt.Function(name.lexeme(), parameters, body);
+        return new Stmt.Function(name.lexeme(), parameters, body, isStatic);
     }
 
     private Stmt varDeclaration() {

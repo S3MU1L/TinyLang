@@ -49,7 +49,11 @@ declaration   ::= classDecl
                 | varDecl 
                 | statement
 
-classDecl     ::= "class" IDENT "{" function* "}" 
+classDecl     ::= class IDENT ( "extends" IDENT )? "{" classMember* "}"
+
+classMember   ::= classFunction | function
+
+classFunction ::= "class" function
 
 funDecl       ::= "fn" function 
 

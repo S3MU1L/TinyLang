@@ -9,7 +9,7 @@ public class AnonymousFunctionAdapter {
 
     public static TinyLangCallable adapt(Expr.Function expr, Environment env) {
         String functionName = "<anonymous$" + counter + ">";
-        Stmt.Function functionStmt = new Stmt.Function(functionName, expr.params, expr.body);
+        Stmt.Function functionStmt = new Stmt.Function(functionName, expr.params, expr.body, false);
         counter++;
         return new TinyLangFunction(functionStmt, env, false);
     }

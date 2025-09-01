@@ -62,11 +62,17 @@ public abstract class Stmt {
         public final String name;
         public final List<String> params;
         public final List<Stmt> body;
+        private final boolean isStatic;
 
-        public Function(String name, List<String> params, List<Stmt> body) {
+        public Function(String name, List<String> params, List<Stmt> body, boolean isStatic) {
             this.name = name;
             this.params = params;
             this.body = body;
+            this.isStatic = isStatic;
+        }
+
+        public boolean isStatic() {
+            return isStatic;
         }
 
         @Override

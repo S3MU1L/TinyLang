@@ -7,10 +7,12 @@ public class TinyLangClass implements TinyLangCallable {
 
     private final String name;
     private final Map<String, TinyLangFunction> methods;
+    private final Map<String, TinyLangFunction> staticMethods;
 
-    TinyLangClass(String name, Map<String, TinyLangFunction> methods) {
+    TinyLangClass(String name, Map<String, TinyLangFunction> methods, Map<String, TinyLangFunction> staticMethods) {
         this.name = name;
         this.methods = methods;
+        this.staticMethods = staticMethods;
     }
 
     @Override
@@ -22,9 +24,12 @@ public class TinyLangClass implements TinyLangCallable {
         return name;
     }
 
-    public TinyLangFunction findMethod(String init) {
-        if (methods.containsKey(init)) {
-            return methods.get(init);
+    public TinyLangFunction findMethod(String name) {
+        if (methods.containsKey(name)) {
+            return methods.get(name);
+        }
+        if (staticMethods.containsKey(name)) {
+            return staticMethods.get(name);
         }
         return null;
     }
