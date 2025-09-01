@@ -1,0 +1,11 @@
+let x = 10;
+{
+	fn add( n )
+	{
+	    return n + x;
+    }
+
+	print add( 1 );
+	let x = 5;
+	print add( 1 );
+}
